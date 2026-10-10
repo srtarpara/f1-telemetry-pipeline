@@ -33,3 +33,10 @@
 **Objective:** Identify the different types of UDP telemetry packets received from the F1 26 game.  
 **Description:** Updated the Python UDP receiver to read the packet header and identify incoming telemetry packets using their packet IDs. Used the F1 telemetry documentation to determine the byte offset of the packet ID and Python's `struct.unpack_from()` to decode it from the raw binary data. Learned about byte offsets, data types, and little-endian byte ordering. Next steps will be to filter for Car Telemetry packets and extract actual values such as car speed.
 
+# Entry 004 — Decoding Car Telemetry Data
+
+**Date:** 2026-10-10  
+**Milestone:** Extracting Car Telemetry Data  
+**Status:** Completed  
+**Objective:** Decode raw Car Telemetry packets to extract the player's car speed.  
+**Description:** Updated the Python UDP receiver to filter for Car Telemetry packets (ID 6) and extract the player's car index from the packet header. Used the F1 telemetry documentation to calculate the byte offset of the player's telemetry record, accounting for the 29-byte header and 59-byte records for each car. Used `struct.unpack_from()` to decode the speed value as a `uint16` and successfully verified that the extracted speed matched the in-game dashboard. Next steps will be to identify which telemetry data points to collect and plan how to structure the data for storage in PostgreSQL.

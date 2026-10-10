@@ -46,8 +46,27 @@ try:
 
         # Decodes the data to pull the packet id from the header.
         packet_id = struct.unpack_from("<B", data, 6)[0]
-    
-        print(f"Received {packet_name[packet_id]} packet from {addr} with size {len(data)} bytes")
+
+        # Packet ID 6 contains Car Telemetry data for all 24 cars.
+        if packet_id == 6:
+            # Read the player's car index from byte offset 27 in the packet header.
+            # # "<B" reads 1 byte as an unsigned integer (uint8).
+            player_car_index = struct.unpack_from("<B", data, 27)[0]
+
+            # Calculate where our car's telemetry data starts in the packet.
+            # 29 = Size of the packet header in bytes.
+            # 59 = Size of one car's telemetry record in bytes.
+            # Multiplying the player index by 59 skips the records of the cars before ours.
+            speed_offset = 29 + (player_car_index * 59)
+
+            # Speed is the first field in each car's telemetry record.
+            # "<H" reads 2 bytes as a little-endian unsigned integer (uint16).
+            # The speed value is measured in km/h.
+            speed = struct.unpack_from("<H", data, speed_offset)[0]
+
+            print(f"Speed: {speed} km/h")
+            print(f"Player Car Index: {player_car_index}")
+            print(f"Received {packet_name[packet_id]} packet from {addr} with size {len(data)} bytes")
 
 except KeyboardInterrupt:
     print("\nStopping UDP receiver...")
