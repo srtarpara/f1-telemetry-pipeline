@@ -115,6 +115,10 @@ try:
             # Display the packet type and total number of bytes received.
             print(f"Received {packet_name[packet_id]} packet with size {len(data)} bytes")
 
+        elif packet_id == 2:
+            # Display the packet type and total number of bytes received.
+            print(f"Received {packet_name[packet_id]} packet with size {len(data)} bytes")
+
 except KeyboardInterrupt:
     print("\nStopping UDP receiver...")
 finally:
