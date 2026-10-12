@@ -116,6 +116,21 @@ try:
             print(f"Received {packet_name[packet_id]} packet with size {len(data)} bytes")
 
         elif packet_id == 2:
+
+            # Read the player's car index from byte offset 27 in the header.
+            # This tells us which of the 24 car records belongs to the player.
+            player_car_index = struct.unpack_from("<B", data, 27)[0]
+
+            lapDistance_offset = 29 + (57 * player_car_index) + 19
+            lapDistance = struct.unpack_from("<f", data, lapDistance_offset)[0]
+
+            currentLapNum_offset = 29 + (57 * player_car_index) + 32
+            currentLapNum = struct.unpack_from("<B", data, currentLapNum_offset)
+
+            print(f"Lap Distance: {lapDistance}")
+            print(f"Current Lap: {currentLapNum}")
+
+
             # Display the packet type and total number of bytes received.
             print(f"Received {packet_name[packet_id]} packet with size {len(data)} bytes")
 
