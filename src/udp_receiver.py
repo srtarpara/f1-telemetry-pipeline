@@ -115,24 +115,35 @@ try:
             # Display the packet type and total number of bytes received.
             print(f"Received {packet_name[packet_id]} packet with size {len(data)} bytes")
 
-        elif packet_id == 2:
+        
+        if packet_id == 2:
 
-            # Read the player's car index from byte offset 27 in the header.
-            # This tells us which of the 24 car records belongs to the player.
+            # Read the player's car index from byte offset 27 in the packet header.
+            # This identifies which of the 24 car records belongs to the player.
             player_car_index = struct.unpack_from("<B", data, 27)[0]
 
-            lapDistance_offset = 29 + (57 * player_car_index) + 19
+            # Skip the 29-byte header and the preceding 57-byte LapData records.
+            # Then move 20 bytes into the player's record to find lap distance.
+            lapDistance_offset = 29 + (57 * player_car_index) + 20
+
+            # Decode lap distance as a 4-byte float (distance in meters).
             lapDistance = struct.unpack_from("<f", data, lapDistance_offset)[0]
 
-            currentLapNum_offset = 29 + (57 * player_car_index) + 32
-            currentLapNum = struct.unpack_from("<B", data, currentLapNum_offset)
+            # Move 33 bytes into the player's LapData record to find the lap number.
+            currentLapNum_offset = 29 + (57 * player_car_index) + 33
 
-            print(f"Lap Distance: {lapDistance}")
+            # Decode the current lap number as an unsigned 8-bit integer (1 byte).
+            currentLapNum = struct.unpack_from("<B", data, currentLapNum_offset)[0]
+
+            # Convert lap distance from meters to kilometers for easier reading.
+            print(f"Lap Distance: {lapDistance / 1000} km")
+
+            # Display the player's current lap number.
             print(f"Current Lap: {currentLapNum}")
-
 
             # Display the packet type and total number of bytes received.
             print(f"Received {packet_name[packet_id]} packet with size {len(data)} bytes")
+
 
 except KeyboardInterrupt:
     print("\nStopping UDP receiver...")

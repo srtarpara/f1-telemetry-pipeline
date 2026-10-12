@@ -49,3 +49,15 @@
 **Objective:** Extract the core driving telemetry values from the F1 26 Car Telemetry packets.
 
 **Description:** Expanded the Python UDP receiver to decode additional data from Car Telemetry packets (ID 6), including throttle, steering, brake, gear, and engine RPM alongside speed. Used the F1 telemetry documentation to identify each field's data type, size, and byte offset within the player's car telemetry record. Used Python's `struct.unpack_from()` with the appropriate format characters to decode floating-point values and signed and unsigned integers. Successfully tested the decoded values in-game and verified that they responded correctly to driving inputs. Next steps will be to decode Lap Data packets (ID 2) to extract lap numbers, lap distances, and timing information for post-session lap analysis.
+
+# Entry 006 — Decoding Lap Data Packets
+
+**Date:** 2026-10-12
+
+**Milestone:** Decoding Lap Data Packets
+
+**Status:** Completed
+
+**Objective:** Extract the player's current lap number and lap distance from F1 26 Lap Data packets.
+
+**Description:** Expanded the Python UDP receiver to identify and decode Lap Data packets (ID 2) alongside the existing Car Telemetry packets. Used the F1 telemetry documentation to determine the size of each LapData record and locate the lap distance and current lap number fields. Calculated the byte offsets using the packet header size, player car index, and record size. Used Python's `struct.unpack_from()` to decode lap distance as a float and current lap number as an unsigned 8-bit integer. Converted lap distance from meters to kilometers and successfully tested both values in-game. Next steps will be to extract lap timing information and prepare the telemetry data for storage in PostgreSQL.
