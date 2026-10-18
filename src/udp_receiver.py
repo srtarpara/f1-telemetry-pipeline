@@ -1,5 +1,6 @@
 import socket
 import struct
+import psycopg
 
 
 # Dictionary that contains the packet id to its corresponding name
@@ -38,6 +39,13 @@ sock.bind((UDP_IP, UDP_PORT))
 
 print(f"Listening for UDP packets on {UDP_IP}:{UDP_PORT}...")
 
+# Connect to the PostgreSQL database.
+conn = psycopg.connect(
+    dbname="f1_telemetry",
+    user="postgres",
+    host="localhost"
+)
+
 try:
     while True:
 
@@ -73,9 +81,19 @@ try:
             # A negative value can represent an unavailable track ID.
             m_trackid = struct.unpack_from("<b", data, trackid_offset)[0]
 
-            print(f"Session ID: {m_session_uid}")
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    INSERT INTO sessions (session_uid, track_id)
+                    VALUES (%s, %s)
+                    ON CONFLICT (session_uid) DO NOTHING;
+                    """,
+                    (m_session_uid, m_trackid)
+                )
+
+            conn.commit()
+
             print(f"Session Time: {m_session_time:.3f} seconds")
-            print(f"Track ID: {m_trackid}")
 
             # Display the packet type and total number of bytes.
             print(
@@ -209,21 +227,28 @@ try:
                 "<B", data, currentLapInvalid_offset
             )[0]
 
-            # Display session information and decoded lap data.
-            print(f"Session ID: {m_session_uid}")
-            print(f"Session Time: {m_session_time:.3f} seconds")
-            print(f"Lap Distance: {lapDistance / 1000:.3f} km")
-            print(f"Current Lap: {currentLapNum}")
-            print(
-                f"Last Lap Time: "
-                f"{m_lastLapTimeInMS / 1000:.3f} seconds"
-            )
-            print(
-                f"Current Lap Time: "
-                f"{m_currentLapTimeInMS / 1000:.3f} seconds"
-            )
-            print(f"Current Lap Invalid: {m_currentLapInvalid}")
+            if currentLapNum > 1 and m_lastLapTimeInMS > 0:
 
+                # The last lap time belongs to the previous lap.
+                completed_lap_number = currentLapNum - 1
+
+                with conn.cursor() as cur:
+                    cur.execute(
+                        """
+                        INSERT INTO laps (
+                            session_uid,
+                            lap_number,
+                            last_lap_time_ms,
+                            lap_valid
+                        )
+                        VALUES (%s, %s, %s, %s)
+                        ON CONFLICT (session_uid, lap_number) DO NOTHING;
+                        """,
+                        (m_session_uid, completed_lap_number, m_lastLapTimeInMS, None)
+                    )
+                conn.commit()
+            
+        
             # Display the packet type and total packet size.
             print(
                 f"Received {packet_name[packet_id]} "
@@ -231,10 +256,10 @@ try:
             )
 
 
-
 except KeyboardInterrupt:
     print("\nStopping UDP receiver...")
 finally:
+    conn.close()
     # Clean up and close the socket
     sock.close()
 
