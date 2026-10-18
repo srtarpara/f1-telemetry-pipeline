@@ -73,3 +73,30 @@
 **Objective:** Expand the Lap Data decoder to extract current lap time, previous lap time, and lap validity information.
 
 **Description:** Expanded the Python UDP receiver to decode additional fields from Lap Data packets (ID 2). Used the F1 telemetry documentation to identify the data types and byte offsets for the previous lap time, current lap time, and current lap invalid flag. Used Python's `struct.unpack_from()` with the appropriate format characters to extract the timing values as unsigned 32-bit integers and the invalid flag as an unsigned 8-bit integer. Successfully tested the new fields in-game. Improved the code by calculating the player's LapData record offset once and converting lap times from milliseconds to seconds for easier reading. Next steps will be to finalize the required telemetry fields and begin designing the PostgreSQL database schema.
+
+# Entry 008 — Connecting the F1 Telemetry Pipeline to PostgreSQL
+
+**Date:** 2026-10-18  
+**Milestone:** Database Integration and Lap Data Storage  
+**Status:** In Progress
+
+### Objective
+Connect the Python UDP telemetry receiver to PostgreSQL and begin storing real F1 26 session and lap data.
+
+### Description
+Today, I created a Python virtual environment (`.venv`) in VS Code and installed Psycopg to connect my application to PostgreSQL. I successfully tested the database connection and modified my UDP receiver to automatically insert real F1 26 session information into the `sessions` table.
+
+I then worked on storing completed lap data by creating a `laps` table with columns for session UID, lap number, lap time in milliseconds, and lap validity. I added a parameterized SQL `INSERT` statement to the Lap Data packet handler and used `ON CONFLICT` to prevent duplicate lap records.
+
+I also learned about PostgreSQL data types such as `SMALLINT`, `INTEGER`, `NUMERIC`, and `BOOLEAN`, as well as primary keys, foreign keys, and SQL `NULL` values.
+
+An important discovery was that the game's last-lap time refers to the previously completed lap, while its current-lap invalid flag describes the lap currently being driven. For now, lap validity is stored as `NULL` to avoid recording incorrect information.
+
+### Next Steps
+- Run the UDP receiver and complete multiple laps in F1 26.
+- Verify that completed lap times are correctly inserted into PostgreSQL.
+- Query the `laps` table to compare lap times.
+- Implement accurate lap-validity tracking.
+- Begin storing live car telemetry, including speed, throttle, brake, gear, and RPM.
+
+**Key Takeaway:** The pipeline can now receive real F1 telemetry and save racing session information to PostgreSQL. Lap data insertion has been implemented and is ready for testing.
