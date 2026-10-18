@@ -61,3 +61,15 @@
 **Objective:** Extract the player's current lap number and lap distance from F1 26 Lap Data packets.
 
 **Description:** Expanded the Python UDP receiver to identify and decode Lap Data packets (ID 2) alongside the existing Car Telemetry packets. Used the F1 telemetry documentation to determine the size of each LapData record and locate the lap distance and current lap number fields. Calculated the byte offsets using the packet header size, player car index, and record size. Used Python's `struct.unpack_from()` to decode lap distance as a float and current lap number as an unsigned 8-bit integer. Converted lap distance from meters to kilometers and successfully tested both values in-game. Next steps will be to extract lap timing information and prepare the telemetry data for storage in PostgreSQL.
+
+# Entry 007 — Decoding Lap Timing Information
+
+**Date:** 2026-10-18
+
+**Milestone:** Decoding Lap Timing Information
+
+**Status:** Completed
+
+**Objective:** Expand the Lap Data decoder to extract current lap time, previous lap time, and lap validity information.
+
+**Description:** Expanded the Python UDP receiver to decode additional fields from Lap Data packets (ID 2). Used the F1 telemetry documentation to identify the data types and byte offsets for the previous lap time, current lap time, and current lap invalid flag. Used Python's `struct.unpack_from()` with the appropriate format characters to extract the timing values as unsigned 32-bit integers and the invalid flag as an unsigned 8-bit integer. Successfully tested the new fields in-game. Improved the code by calculating the player's LapData record offset once and converting lap times from milliseconds to seconds for easier reading. Next steps will be to finalize the required telemetry fields and begin designing the PostgreSQL database schema.

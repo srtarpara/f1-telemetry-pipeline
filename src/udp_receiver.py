@@ -116,33 +116,48 @@ try:
             print(f"Received {packet_name[packet_id]} packet with size {len(data)} bytes")
 
         
+
         if packet_id == 2:
 
-            # Read the player's car index from byte offset 27 in the packet header.
-            # This identifies which of the 24 car records belongs to the player.
+            # Identify the player's car using the index stored in the packet header.
             player_car_index = struct.unpack_from("<B", data, 27)[0]
 
-            # Skip the 29-byte header and the preceding 57-byte LapData records.
-            # Then move 20 bytes into the player's record to find lap distance.
-            lapDistance_offset = 29 + (57 * player_car_index) + 20
+            # Find the start of the player's LapData record.
+            # 29 bytes = packet header; 57 bytes = each car's LapData record.
+            lap_record_offset = 29 + (57 * player_car_index)
 
-            # Decode lap distance as a 4-byte float (distance in meters).
+            # Decode lap distance as a 4-byte float (meters).
+            lapDistance_offset = lap_record_offset + 20
             lapDistance = struct.unpack_from("<f", data, lapDistance_offset)[0]
 
-            # Move 33 bytes into the player's LapData record to find the lap number.
-            currentLapNum_offset = 29 + (57 * player_car_index) + 33
-
-            # Decode the current lap number as an unsigned 8-bit integer (1 byte).
+            # Decode the current lap number as an unsigned 8-bit integer.
+            currentLapNum_offset = lap_record_offset + 33
             currentLapNum = struct.unpack_from("<B", data, currentLapNum_offset)[0]
 
-            # Convert lap distance from meters to kilometers for easier reading.
-            print(f"Lap Distance: {lapDistance / 1000} km")
+            # Decode the previous completed lap time as a 4-byte unsigned integer.
+            # The value is measured in milliseconds.
+            lastLapTime_offset = lap_record_offset
+            m_lastLapTimeInMS = struct.unpack_from("<I", data, lastLapTime_offset)[0]
 
-            # Display the player's current lap number.
+            # Decode the elapsed time of the current lap, in milliseconds.
+            currentLapTime_offset = lap_record_offset + 4
+            m_currentLapTimeInMS = struct.unpack_from("<I", data, currentLapTime_offset)[0]
+
+            # Decode the current lap invalid flag as an unsigned 8-bit integer.
+            # 0 = valid lap; 1 = invalid lap.
+            currentLapInvalid_offset = lap_record_offset + 37
+            m_currentLapInvalid = struct.unpack_from("<B", data, currentLapInvalid_offset)[0]
+
+            # Display the decoded lap information.
+            print(f"Lap Distance: {lapDistance / 1000:.3f} km")
             print(f"Current Lap: {currentLapNum}")
+            print(f"Last Lap Time: {m_lastLapTimeInMS / 1000:.3f} seconds")
+            print(f"Current Lap Time: {m_currentLapTimeInMS / 1000:.3f} seconds")
+            print(f"Current Lap Invalid: {m_currentLapInvalid}")
 
-            # Display the packet type and total number of bytes received.
+            # Display the packet type and total packet size.
             print(f"Received {packet_name[packet_id]} packet with size {len(data)} bytes")
+
 
 
 except KeyboardInterrupt:
